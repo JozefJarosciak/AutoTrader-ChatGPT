@@ -52,7 +52,8 @@ AutoTrader AI Assistant is a Python script that simplifies car searching and sel
 ---
 
 ## Screenshots
-*Add screenshots of the script in action here.*
+![image](https://github.com/user-attachments/assets/f0aaa87f-3572-4f84-8881-bb60c3144f01)
+
 
 ---
 
