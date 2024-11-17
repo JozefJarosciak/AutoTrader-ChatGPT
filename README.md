@@ -26,8 +26,8 @@ AutoTrader AI Assistant is a Python script that simplifies car searching and sel
 ## How to Use
 1. **Clone the Repository**:
     ```bash
-    git clone <your-repository-url>
-    cd <your-repository-folder>
+    git clone https://github.com/JozefJarosciak/AutoTrader-ChatGPT.git
+    cd AutoTrader-ChatGPT
     ```
 
 2. **Install Dependencies**:
