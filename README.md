@@ -70,4 +70,5 @@ This project is open-source and available under the [MIT License](LICENSE).
 
 ---
 
-Happy car hunting!
+## Important Notice
+This script is intended solely for testing and educational purposes. Users must ensure that they comply with AutoTrader's terms of service and scraping policies when using this script.
