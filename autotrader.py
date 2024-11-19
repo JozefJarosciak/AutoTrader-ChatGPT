@@ -1,3 +1,4 @@
+import unicodedata
 import textwrap
 import json
 import logging
@@ -14,33 +15,35 @@ from prettytable import PrettyTable
 # ======================== CONFIGURATION ========================
 
 # OpenAI API Configuration
-OPENAI_API_KEY = ""  # Replace with your actual API key
-OPENAI_MODEL = "gpt-4"
-OPENAI_MAX_TOKENS = 1500
+OPENAI_API_KEY = ""   # Replace with your actual API key from https://platform.openai.com/api-keys
+OPENAI_MODEL = "gpt-4o-mini"
+OPENAI_MAX_TOKENS = 2000
 OPENAI_TEMPERATURE = 0  # Deterministic output
 
 # OpenAI Prompt Template
 OPENAI_PROMPT_TEMPLATE = (
-    "As an expert car advisor, select the top 10 best-value cars from the list below. Consider car configuration, mileage, year, price and everything you know about the car made in that year."
-    "Provide a one-sentence reason for each and include what configuration made you choose this car (e.g., platinum edition, panoramic roof, etc.). Each entry in your output should include 'id', 'Rk' (Rank), 'Rsn' (Reason), "
-    "and the car attributes 'Mk', 'Md', 'Yr', 'Mi', 'Pr', 'Cfg'.\n\n"
+    "As an expert car advisor, select the top 10 best-value cars from the list below. "
+    "Consider car configuration, mileage, year, price, and everything you know about cars made in that year. "
+    "Provide a one-sentence reason for each and include what configuration made you choose this car (e.g., platinum edition, panoramic roof, etc.). "
+    "Each entry in your output should include 'id', 'Rk' (Rank), 'Rsn' (Reason), and the car attributes 'Mk', 'Md', 'Yr', 'Mi', 'Pr', 'Cfg'.\n\n"
     "Cars:\n{car_descriptions}\n\n"
-    "Use the same field names as provided, including 'id'. Do not modify the 'id'. Provide your output as a JSON array."
+    "Return the response as a plain JSON array, without any Markdown formatting, code blocks, or extra text. "
+    "Do not include anything outside the JSON array."
 )
-
 
 # Script Configuration
 MAX_CARS_TO_SEND = 100  # Limit the number of cars sent to OpenAI
 CACHE_DAYS = 7
 CACHE_FOLDER = "autotrader-cars"
 SEARCH_DELAY = 2  # Delay between searches in seconds
+TABLE_MAX_WIDTH = 75
 
 # User Input Defaults
-DEFAULT_POSTAL_CODE = "M5G 1Z3"
+DEFAULT_POSTAL_CODE = "L4C 5G6"
 DEFAULT_RADIUS_KM = 60
 DEFAULT_MAX_MILEAGE_KM = 60000
-DEFAULT_YEAR_RANGE = "2018-2024"
-DEFAULT_MAX_PRICE = 30000
+DEFAULT_YEAR_RANGE = "2017-2024"
+DEFAULT_MAX_PRICE = 25000
 DEFAULT_SEARCH_PROMPT = "Nissan Murano, Toyota RAV4, Honda CR-V"
 
 # URL and Headers
@@ -114,8 +117,15 @@ def sort_cars_with_gpt(cars: List[Dict]) -> List[Dict]:
 
         # Parse GPT-4 response
         gpt_output = response["choices"][0]["message"]["content"]
+        gpt_output = unicodedata.normalize('NFKC', gpt_output).strip()
+        logging.debug(f"Raw GPT Output (repr): {repr(gpt_output)}")
         logging.debug(f"GPT Output: {gpt_output}")
-        sorted_cars = json.loads(gpt_output)  # Expecting JSON output
+        try:
+            sorted_cars = json.loads(gpt_output)
+        except json.JSONDecodeError as e:
+            logging.error(f"JSON decoding error: {e}")
+            logging.error(f"Offending JSON: {repr(gpt_output)}")
+            sorted_cars = []  # Or handle appropriately
 
         # Map GPT output back to original car data
         for car in sorted_cars:
@@ -388,7 +398,7 @@ def display_cars_table_with_reasons(cars: List[Dict], title: str):
     ]
 
     # Set max width for "ChatGPT Reason" column to 200 characters
-    table.max_width["ChatGPT Reason"] = 200
+    table.max_width["ChatGPT Reason"] = TABLE_MAX_WIDTH
 
     for car in cars:
         mileage = car.get("mileage", "N/A")
